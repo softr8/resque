@@ -62,9 +62,9 @@ task :publish do
   require 'resque/version'
 
   sh "gem build resque.gemspec"
-  sh "gem push resque-#{Resque::Version}.gem"
-  sh "git tag v#{Resque::Version}"
-  sh "git push origin v#{Resque::Version}"
+  sh "gem push resque-#{Tr8sque::Version}.gem"
+  sh "git tag v#{Tr8sque::Version}"
+  sh "git push origin v#{Tr8sque::Version}"
   sh "git push origin master"
   sh "git clean -fd"
 end

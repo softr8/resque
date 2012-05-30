@@ -7,10 +7,10 @@ rescue LoadError
   require 'rubygems'
   require 'vegas'
 end  
-require 'resque/server'
+require 'tr8sque/server'
 
 
-Vegas::Runner.new(Resque::Server, 'resque-web', {
+Vegas::Runner.new(Tr8sque::Server, 'resque-web', {
   :before_run => lambda {|v|
     path = (ENV['RESQUECONFIG'] || v.args.first)
     load path.to_s.strip if path
@@ -18,10 +18,10 @@ Vegas::Runner.new(Resque::Server, 'resque-web', {
 }) do |runner, opts, app|
   opts.on('-N NAMESPACE', "--namespace NAMESPACE", "set the Redis namespace") {|namespace|
     runner.logger.info "Using Redis namespace '#{namespace}'"
-    Resque.redis.namespace = namespace
+    Tr8sque.redis.namespace = namespace
   }
   opts.on('-r redis-connection', "--redis redis-connection", "set the Redis connection string") {|redis_conf|
     runner.logger.info "Using Redis connection '#{redis_conf}'"
-    Resque.redis = redis_conf
+    Tr8sque.redis = redis_conf
   }
 end

@@ -1,6 +1,9 @@
 Resque
 ======
 
+THIS IS A COPY OF ORIGINAL Resque GEM WRITTEN BY DEFUNKT, ALL CREDIT IS FOR HIM
+AND CONTRIBUTORS, I JUST RENAMED THE PACKAGE BECASE MY OWN NEEDS
+
 Resque (pronounced like "rescue") is a Redis-backed library for creating
 background jobs, placing those jobs on multiple queues, and processing
 them later.

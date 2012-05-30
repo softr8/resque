@@ -1,45 +1,45 @@
 require 'test_helper'
 
-describe "Resque::Worker" do
+describe "Tr8sque::Worker" do
   include Test::Unit::Assertions
 
   before do
-    Resque.redis = Resque.redis # reset state in Resque object
-    Resque.redis.flushall
+    Tr8sque.redis = Tr8sque.redis # reset state in Tr8sque object
+    Tr8sque.redis.flushall
 
-    Resque.before_first_fork = nil
-    Resque.before_fork = nil
-    Resque.after_fork = nil
+    Tr8sque.before_first_fork = nil
+    Tr8sque.before_fork = nil
+    Tr8sque.after_fork = nil
 
-    @worker = Resque::Worker.new(:jobs)
-    Resque::Job.create(:jobs, SomeJob, 20, '/tmp')
+    @worker = Tr8sque::Worker.new(:jobs)
+    Tr8sque::Job.create(:jobs, SomeJob, 20, '/tmp')
   end
 
   it "can fail jobs" do
-    Resque::Job.create(:jobs, BadJob)
+    Tr8sque::Job.create(:jobs, BadJob)
     @worker.work(0)
-    assert_equal 1, Resque::Failure.count
+    assert_equal 1, Tr8sque::Failure.count
   end
 
   it "failed jobs report exception and message" do
-    Resque::Job.create(:jobs, BadJobWithSyntaxError)
+    Tr8sque::Job.create(:jobs, BadJobWithSyntaxError)
     @worker.work(0)
-    assert_equal('SyntaxError', Resque::Failure.all['exception'])
-    assert_equal('Extra Bad job!', Resque::Failure.all['error'])
+    assert_equal('SyntaxError', Tr8sque::Failure.all['exception'])
+    assert_equal('Extra Bad job!', Tr8sque::Failure.all['error'])
   end
 
   it "does not allow exceptions from failure backend to escape" do
-    job = Resque::Job.new(:jobs, {})
+    job = Tr8sque::Job.new(:jobs, {})
     with_failure_backend BadFailureBackend do
       @worker.perform job
     end
   end
 
   it "fails uncompleted jobs on exit" do
-    job = Resque::Job.new(:jobs, {'class' => 'GoodJob', 'args' => "blah"})
+    job = Tr8sque::Job.new(:jobs, {'class' => 'GoodJob', 'args' => "blah"})
     @worker.working_on(job)
     @worker.unregister_worker
-    assert_equal 1, Resque::Failure.count
+    assert_equal 1, Tr8sque::Failure.count
   end
 
   class ::SimpleJobWithFailureHandling
@@ -53,107 +53,107 @@ describe "Resque::Worker" do
   end
 
   it "fails uncompleted jobs on exit, and calls failure hook" do
-    job = Resque::Job.new(:jobs, {'class' => 'SimpleJobWithFailureHandling', 'args' => ""})
+    job = Tr8sque::Job.new(:jobs, {'class' => 'SimpleJobWithFailureHandling', 'args' => ""})
     @worker.working_on(job)
     @worker.unregister_worker
-    assert_equal 1, Resque::Failure.count
-    assert(SimpleJobWithFailureHandling.exception.kind_of?(Resque::DirtyExit))
+    assert_equal 1, Tr8sque::Failure.count
+    assert(SimpleJobWithFailureHandling.exception.kind_of?(Tr8sque::DirtyExit))
   end
 
   it "can peek at failed jobs" do
-    10.times { Resque::Job.create(:jobs, BadJob) }
+    10.times { Tr8sque::Job.create(:jobs, BadJob) }
     @worker.work(0)
-    assert_equal 10, Resque::Failure.count
+    assert_equal 10, Tr8sque::Failure.count
 
-    assert_equal 10, Resque::Failure.all(0, 20).size
+    assert_equal 10, Tr8sque::Failure.all(0, 20).size
   end
 
   it "can clear failed jobs" do
-    Resque::Job.create(:jobs, BadJob)
+    Tr8sque::Job.create(:jobs, BadJob)
     @worker.work(0)
-    assert_equal 1, Resque::Failure.count
-    Resque::Failure.clear
-    assert_equal 0, Resque::Failure.count
+    assert_equal 1, Tr8sque::Failure.count
+    Tr8sque::Failure.clear
+    assert_equal 0, Tr8sque::Failure.count
   end
 
   it "catches exceptional jobs" do
-    Resque::Job.create(:jobs, BadJob)
-    Resque::Job.create(:jobs, BadJob)
+    Tr8sque::Job.create(:jobs, BadJob)
+    Tr8sque::Job.create(:jobs, BadJob)
     @worker.process
     @worker.process
     @worker.process
-    assert_equal 2, Resque::Failure.count
+    assert_equal 2, Tr8sque::Failure.count
   end
 
   it "strips whitespace from queue names" do
     queues = "critical, high, low".split(',')
-    worker = Resque::Worker.new(*queues)
+    worker = Tr8sque::Worker.new(*queues)
     assert_equal %w( critical high low ), worker.queues
   end
 
   it "can work on multiple queues" do
-    Resque::Job.create(:high, GoodJob)
-    Resque::Job.create(:critical, GoodJob)
+    Tr8sque::Job.create(:high, GoodJob)
+    Tr8sque::Job.create(:critical, GoodJob)
 
-    worker = Resque::Worker.new(:critical, :high)
-
-    worker.process
-    assert_equal 1, Resque.size(:high)
-    assert_equal 0, Resque.size(:critical)
+    worker = Tr8sque::Worker.new(:critical, :high)
 
     worker.process
-    assert_equal 0, Resque.size(:high)
+    assert_equal 1, Tr8sque.size(:high)
+    assert_equal 0, Tr8sque.size(:critical)
+
+    worker.process
+    assert_equal 0, Tr8sque.size(:high)
   end
 
   it "can work on all queues" do
-    Resque::Job.create(:high, GoodJob)
-    Resque::Job.create(:critical, GoodJob)
-    Resque::Job.create(:blahblah, GoodJob)
+    Tr8sque::Job.create(:high, GoodJob)
+    Tr8sque::Job.create(:critical, GoodJob)
+    Tr8sque::Job.create(:blahblah, GoodJob)
 
-    worker = Resque::Worker.new("*")
+    worker = Tr8sque::Worker.new("*")
 
     worker.work(0)
-    assert_equal 0, Resque.size(:high)
-    assert_equal 0, Resque.size(:critical)
-    assert_equal 0, Resque.size(:blahblah)
+    assert_equal 0, Tr8sque.size(:high)
+    assert_equal 0, Tr8sque.size(:critical)
+    assert_equal 0, Tr8sque.size(:blahblah)
   end
 
   it "can work with wildcard at the end of the list" do
-    Resque::Job.create(:high, GoodJob)
-    Resque::Job.create(:critical, GoodJob)
-    Resque::Job.create(:blahblah, GoodJob)
-    Resque::Job.create(:beer, GoodJob)
+    Tr8sque::Job.create(:high, GoodJob)
+    Tr8sque::Job.create(:critical, GoodJob)
+    Tr8sque::Job.create(:blahblah, GoodJob)
+    Tr8sque::Job.create(:beer, GoodJob)
 
-    worker = Resque::Worker.new(:critical, :high, "*")
+    worker = Tr8sque::Worker.new(:critical, :high, "*")
 
     worker.work(0)
-    assert_equal 0, Resque.size(:high)
-    assert_equal 0, Resque.size(:critical)
-    assert_equal 0, Resque.size(:blahblah)
-    assert_equal 0, Resque.size(:beer)
+    assert_equal 0, Tr8sque.size(:high)
+    assert_equal 0, Tr8sque.size(:critical)
+    assert_equal 0, Tr8sque.size(:blahblah)
+    assert_equal 0, Tr8sque.size(:beer)
   end
 
   it "can work with wildcard at the middle of the list" do
-    Resque::Job.create(:high, GoodJob)
-    Resque::Job.create(:critical, GoodJob)
-    Resque::Job.create(:blahblah, GoodJob)
-    Resque::Job.create(:beer, GoodJob)
+    Tr8sque::Job.create(:high, GoodJob)
+    Tr8sque::Job.create(:critical, GoodJob)
+    Tr8sque::Job.create(:blahblah, GoodJob)
+    Tr8sque::Job.create(:beer, GoodJob)
 
-    worker = Resque::Worker.new(:critical, "*", :high)
+    worker = Tr8sque::Worker.new(:critical, "*", :high)
 
     worker.work(0)
-    assert_equal 0, Resque.size(:high)
-    assert_equal 0, Resque.size(:critical)
-    assert_equal 0, Resque.size(:blahblah)
-    assert_equal 0, Resque.size(:beer)
+    assert_equal 0, Tr8sque.size(:high)
+    assert_equal 0, Tr8sque.size(:critical)
+    assert_equal 0, Tr8sque.size(:blahblah)
+    assert_equal 0, Tr8sque.size(:beer)
   end
 
   it "processes * queues in alphabetical order" do
-    Resque::Job.create(:high, GoodJob)
-    Resque::Job.create(:critical, GoodJob)
-    Resque::Job.create(:blahblah, GoodJob)
+    Tr8sque::Job.create(:high, GoodJob)
+    Tr8sque::Job.create(:critical, GoodJob)
+    Tr8sque::Job.create(:blahblah, GoodJob)
 
-    worker = Resque::Worker.new("*")
+    worker = Tr8sque::Worker.new("*")
     processed_queues = []
 
     worker.work(0) do |job|
@@ -164,13 +164,13 @@ describe "Resque::Worker" do
   end
 
   it "can work with dynamically added queues when using wildcard" do
-    worker = Resque::Worker.new("*")
+    worker = Tr8sque::Worker.new("*")
 
-    assert_equal ["jobs"], Resque.queues
+    assert_equal ["jobs"], Tr8sque.queues
 
-    Resque::Job.create(:high, GoodJob)
-    Resque::Job.create(:critical, GoodJob)
-    Resque::Job.create(:blahblah, GoodJob)
+    Tr8sque::Job.create(:high, GoodJob)
+    Tr8sque::Job.create(:critical, GoodJob)
+    Tr8sque::Job.create(:blahblah, GoodJob)
 
     processed_queues = []
 
@@ -186,39 +186,39 @@ describe "Resque::Worker" do
   end
 
   it "complains if no queues are given" do
-    assert_raise Resque::NoQueueError do
-      Resque::Worker.new
+    assert_raise Tr8sque::NoQueueError do
+      Tr8sque::Worker.new
     end
   end
 
   it "fails if a job class has no `perform` method" do
-    worker = Resque::Worker.new(:perform_less)
-    Resque::Job.create(:perform_less, Object)
+    worker = Tr8sque::Worker.new(:perform_less)
+    Tr8sque::Job.create(:perform_less, Object)
 
-    assert_equal 0, Resque::Failure.count
+    assert_equal 0, Tr8sque::Failure.count
     worker.work(0)
-    assert_equal 1, Resque::Failure.count
+    assert_equal 1, Tr8sque::Failure.count
   end
 
   it "inserts itself into the 'workers' list on startup" do
     @worker.work(0) do
-      assert_equal @worker, Resque.workers[0]
+      assert_equal @worker, Tr8sque.workers[0]
     end
   end
 
   it "removes itself from the 'workers' list on shutdown" do
     @worker.work(0) do
-      assert_equal @worker, Resque.workers[0]
+      assert_equal @worker, Tr8sque.workers[0]
     end
 
-    assert_equal [], Resque.workers
+    assert_equal [], Tr8sque.workers
   end
 
   it "removes worker with stringified id" do
     @worker.work(0) do
-      worker_id = Resque.workers[0].to_s
-      Resque.remove_worker(worker_id)
-      assert_equal [], Resque.workers
+      worker_id = Tr8sque.workers[0].to_s
+      Tr8sque.remove_worker(worker_id)
+      assert_equal [], Tr8sque.workers
     end
   end
 
@@ -249,13 +249,13 @@ describe "Resque::Worker" do
 
   it "knows who is working" do
     @worker.work(0) do
-      assert_equal [@worker], Resque.working
+      assert_equal [@worker], Tr8sque.working
     end
   end
 
   it "keeps track of how many jobs it has processed" do
-    Resque::Job.create(:jobs, BadJob)
-    Resque::Job.create(:jobs, BadJob)
+    Tr8sque::Job.create(:jobs, BadJob)
+    Tr8sque::Job.create(:jobs, BadJob)
 
     3.times do
       job = @worker.reserve
@@ -265,7 +265,7 @@ describe "Resque::Worker" do
   end
 
   it "reserve blocks when the queue is empty" do
-    worker = Resque::Worker.new(:timeout)
+    worker = Tr8sque::Worker.new(:timeout)
 
     assert_raises Timeout::Error do
       Timeout.timeout(1) { worker.reserve(5) }
@@ -273,14 +273,14 @@ describe "Resque::Worker" do
   end
 
   it "reserve returns nil when there is no job and is polling" do
-    worker = Resque::Worker.new(:timeout)
+    worker = Tr8sque::Worker.new(:timeout)
 
     assert_equal nil, worker.reserve(1)
   end
 
   it "keeps track of how many failures it has seen" do
-    Resque::Job.create(:jobs, BadJob)
-    Resque::Job.create(:jobs, BadJob)
+    Tr8sque::Job.create(:jobs, BadJob)
+    Tr8sque::Job.create(:jobs, BadJob)
 
     3.times do
       job = @worker.reserve
@@ -304,21 +304,21 @@ describe "Resque::Worker" do
 
   it "knows whether it exists or not" do
     @worker.work(0) do
-      assert Resque::Worker.exists?(@worker)
-      assert !Resque::Worker.exists?('blah-blah')
+      assert Tr8sque::Worker.exists?(@worker)
+      assert !Tr8sque::Worker.exists?('blah-blah')
     end
   end
 
   it "sets $0 while working" do
     @worker.work(0) do
-      ver = Resque::Version
+      ver = Tr8sque::Version
       assert_equal "resque-#{ver}: Processing jobs since #{Time.now.to_i}", $0
     end
   end
 
   it "can be found" do
     @worker.work(0) do
-      found = Resque::Worker.find(@worker.to_s)
+      found = Tr8sque::Worker.find(@worker.to_s)
       assert_equal @worker.to_s, found.to_s
       assert found.working?
       assert_equal @worker.job, found.job
@@ -327,26 +327,26 @@ describe "Resque::Worker" do
 
   it "doesn't find fakes" do
     @worker.work(0) do
-      found = Resque::Worker.find('blah-blah')
+      found = Tr8sque::Worker.find('blah-blah')
       assert_equal nil, found
     end
   end
 
   it "cleans up dead worker info on start (crash recovery)" do
     # first we fake out two dead workers
-    workerA = Resque::Worker.new(:jobs)
+    workerA = Tr8sque::Worker.new(:jobs)
     workerA.instance_variable_set(:@to_s, "#{`hostname`.chomp}:1:jobs")
     workerA.register_worker
 
-    workerB = Resque::Worker.new(:high, :low)
+    workerB = Tr8sque::Worker.new(:high, :low)
     workerB.instance_variable_set(:@to_s, "#{`hostname`.chomp}:2:high,low")
     workerB.register_worker
 
-    assert_equal 2, Resque.workers.size
+    assert_equal 2, Tr8sque.workers.size
 
     # then we prune them
     @worker.work(0) do
-      assert_equal 1, Resque.workers.size
+      assert_equal 1, Tr8sque.workers.size
     end
   end
 
@@ -357,14 +357,14 @@ describe "Resque::Worker" do
 
   it "Processed jobs count" do
     @worker.work(0)
-    assert_equal 1, Resque.info[:processed]
+    assert_equal 1, Tr8sque.info[:processed]
   end
 
   it "Will call a before_first_fork hook only once" do
     $BEFORE_FORK_CALLED = 0
-    Resque.before_first_fork = Proc.new { $BEFORE_FORK_CALLED += 1 }
-    workerA = Resque::Worker.new(:jobs)
-    Resque::Job.create(:jobs, SomeJob, 20, '/tmp')
+    Tr8sque.before_first_fork = Proc.new { $BEFORE_FORK_CALLED += 1 }
+    workerA = Tr8sque::Worker.new(:jobs)
+    Tr8sque::Job.create(:jobs, SomeJob, 20, '/tmp')
 
     assert_equal 0, $BEFORE_FORK_CALLED
 
@@ -378,11 +378,11 @@ describe "Resque::Worker" do
 
   it "Will call a before_fork hook before forking" do
     $BEFORE_FORK_CALLED = false
-    Resque.before_fork = Proc.new { $BEFORE_FORK_CALLED = true }
-    workerA = Resque::Worker.new(:jobs)
+    Tr8sque.before_fork = Proc.new { $BEFORE_FORK_CALLED = true }
+    workerA = Tr8sque::Worker.new(:jobs)
 
     assert !$BEFORE_FORK_CALLED
-    Resque::Job.create(:jobs, SomeJob, 20, '/tmp')
+    Tr8sque::Job.create(:jobs, SomeJob, 20, '/tmp')
     workerA.work(0)
     assert $BEFORE_FORK_CALLED
   end
@@ -408,11 +408,11 @@ describe "Resque::Worker" do
 
   it "Will call an after_fork hook after forking" do
     $AFTER_FORK_CALLED = false
-    Resque.after_fork = Proc.new { $AFTER_FORK_CALLED = true }
-    workerA = Resque::Worker.new(:jobs)
+    Tr8sque.after_fork = Proc.new { $AFTER_FORK_CALLED = true }
+    workerA = Tr8sque::Worker.new(:jobs)
 
     assert !$AFTER_FORK_CALLED
-    Resque::Job.create(:jobs, SomeJob, 20, '/tmp')
+    Tr8sque::Job.create(:jobs, SomeJob, 20, '/tmp')
     workerA.work(0)
     assert $AFTER_FORK_CALLED
   end
@@ -423,21 +423,21 @@ describe "Resque::Worker" do
   
   it "requeue failed queue" do
     queue = 'good_job'
-    Resque::Failure.create(:exception => Exception.new, :worker => Resque::Worker.new(queue), :queue => queue, :payload => {'class' => 'GoodJob'})
-    Resque::Failure.create(:exception => Exception.new, :worker => Resque::Worker.new(queue), :queue => 'some_job', :payload => {'class' => 'SomeJob'})
-    Resque::Failure.requeue_queue(queue)
-    assert Resque::Failure.all(0).has_key?('retried_at')
-    assert !Resque::Failure.all(1).has_key?('retried_at')
+    Tr8sque::Failure.create(:exception => Exception.new, :worker => Tr8sque::Worker.new(queue), :queue => queue, :payload => {'class' => 'GoodJob'})
+    Tr8sque::Failure.create(:exception => Exception.new, :worker => Tr8sque::Worker.new(queue), :queue => 'some_job', :payload => {'class' => 'SomeJob'})
+    Tr8sque::Failure.requeue_queue(queue)
+    assert Tr8sque::Failure.all(0).has_key?('retried_at')
+    assert !Tr8sque::Failure.all(1).has_key?('retried_at')
   end
 
   it "remove failed queue" do
     queue = 'good_job'
     queue2 = 'some_job'
-    Resque::Failure.create(:exception => Exception.new, :worker => Resque::Worker.new(queue), :queue => queue, :payload => {'class' => 'GoodJob'})
-    Resque::Failure.create(:exception => Exception.new, :worker => Resque::Worker.new(queue2), :queue => queue2, :payload => {'class' => 'SomeJob'})
-    Resque::Failure.create(:exception => Exception.new, :worker => Resque::Worker.new(queue), :queue => queue, :payload => {'class' => 'GoodJob'})
-    Resque::Failure.remove_queue(queue)
-    assert_equal queue2, Resque::Failure.all(0)['queue']
-    assert_equal 1, Resque::Failure.count
+    Tr8sque::Failure.create(:exception => Exception.new, :worker => Tr8sque::Worker.new(queue), :queue => queue, :payload => {'class' => 'GoodJob'})
+    Tr8sque::Failure.create(:exception => Exception.new, :worker => Tr8sque::Worker.new(queue2), :queue => queue2, :payload => {'class' => 'SomeJob'})
+    Tr8sque::Failure.create(:exception => Exception.new, :worker => Tr8sque::Worker.new(queue), :queue => queue, :payload => {'class' => 'GoodJob'})
+    Tr8sque::Failure.remove_queue(queue)
+    assert_equal queue2, Tr8sque::Failure.all(0)['queue']
+    assert_equal 1, Tr8sque::Failure.count
   end
 end

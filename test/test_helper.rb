@@ -9,7 +9,7 @@ require 'minitest/spec'
 require 'test/unit'
 
 require 'redis/namespace'
-require 'resque'
+require 'tr8sque'
 
 #
 # make sure we can run redis
@@ -50,11 +50,11 @@ if ENV.key? 'RESQUE_DISTRIBUTED'
   `redis-server #{dir}/redis-test.conf`
   `redis-server #{dir}/redis-test-cluster.conf`
   r = Redis::Distributed.new(['redis://localhost:9736', 'redis://localhost:9737'])
-  Resque.redis = Redis::Namespace.new :resque, :redis => r
+  Tr8sque.redis = Redis::Namespace.new :resque, :redis => r
 else
   puts "Starting redis for testing at localhost:9736..."
   `redis-server #{dir}/redis-test.conf`
-  Resque.redis = 'localhost:9736'
+  Tr8sque.redis = 'localhost:9736'
 end
 
 
@@ -63,7 +63,7 @@ end
 #
 module PerformJob
   def perform_job(klass, *args)
-    resque_job = Resque::Job.new(:testqueue, 'class' => klass, 'args' => args)
+    resque_job = Tr8sque::Job.new(:testqueue, 'class' => klass, 'args' => args)
     resque_job.perform
   end
 end
@@ -105,18 +105,18 @@ class BadJobWithSyntaxError
   end
 end
 
-class BadFailureBackend < Resque::Failure::Base
+class BadFailureBackend < Tr8sque::Failure::Base
   def save
     raise Exception.new("Failure backend error")
   end
 end
 
 def with_failure_backend(failure_backend, &block)
-  previous_backend = Resque::Failure.backend
-  Resque::Failure.backend = failure_backend
+  previous_backend = Tr8sque::Failure.backend
+  Tr8sque::Failure.backend = failure_backend
   yield block
 ensure
-  Resque::Failure.backend = previous_backend
+  Tr8sque::Failure.backend = previous_backend
 end
 
 class Time

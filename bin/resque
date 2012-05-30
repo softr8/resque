@@ -7,7 +7,7 @@ rescue LoadError
   require 'rubygems'
   require 'redis-namespace'
 end
-require 'resque'
+require 'tr8sque'
 require 'optparse'
 
 parser = OptionParser.new do |opts|
@@ -17,11 +17,11 @@ parser = OptionParser.new do |opts|
   opts.separator "Options:"
 
   opts.on("-r", "--redis [HOST:PORT]", "Redis connection string") do |host|
-    Resque.redis = host
+    Tr8sque.redis = host
   end
 
   opts.on("-N", "--namespace [NAMESPACE]", "Redis namespace") do |namespace|
-    Resque.redis.namespace = namespace
+    Tr8sque.redis.namespace = namespace
   end
 
   opts.on("-h", "--help", "Show this message") do
@@ -53,13 +53,13 @@ end
 def remove(worker)
   abort "** resque remove WORKER_ID" if worker.nil?
 
-  Resque.remove_worker(worker)
+  Tr8sque.remove_worker(worker)
   puts "** removed #{worker}"
 end
 
 def list
-  if Resque.workers.any?
-    Resque.workers.each do |worker|
+  if Tr8sque.workers.any?
+    Tr8sque.workers.each do |worker|
       puts "#{worker} (#{worker.state})"
     end
   else

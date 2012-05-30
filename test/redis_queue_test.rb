@@ -1,7 +1,7 @@
 require 'test_helper'
-require 'resque/queue'
+require 'tr8sque/queue'
 
-describe "Resque::Queue" do
+describe "Tr8sque::Queue" do
   include Test::Unit::Assertions
 
   class Thing
@@ -17,7 +17,7 @@ describe "Resque::Queue" do
   end
 
   before do
-    Resque.redis.flushall
+    Tr8sque.redis.flushall
   end
 
   it "generates a redis_name" do
@@ -91,10 +91,10 @@ describe "Resque::Queue" do
     end
   end
 
-  it "registers itself with Resque" do
+  it "registers itself with Tr8sque" do
     q
 
-    assert_equal ["foo"], Resque.queues
+    assert_equal ["foo"], Tr8sque.queues
   end
 
   it "cleans up after itself when destroyed" do
@@ -102,8 +102,8 @@ describe "Resque::Queue" do
     queue << Thing.new
     q.destroy
 
-    assert_equal [], Resque.queues
-    assert !Resque.redis.exists(queue.redis_name)
+    assert_equal [], Tr8sque.queues
+    assert !Tr8sque.redis.exists(queue.redis_name)
   end
 
   it "returns false if a queue is not destroyed" do
@@ -122,12 +122,12 @@ describe "Resque::Queue" do
     queue1 << x
     queue1.destroy
 
-    assert_raise Resque::QueueDestroyed do
+    assert_raise Tr8sque::QueueDestroyed do
       queue1 << x
     end
   end
 
   def q
-    Resque::Queue.new 'foo', Resque.redis
+    Tr8sque::Queue.new 'foo', Tr8sque.redis
   end
 end

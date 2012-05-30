@@ -1,1 +1,1 @@
-require 'resque'
+require 'tr8sque'
