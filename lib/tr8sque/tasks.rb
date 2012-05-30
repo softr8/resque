@@ -40,7 +40,7 @@ namespace :tr8sque do
 
     ENV['COUNT'].to_i.times do
       threads << Thread.new do
-        system "rake resque:work"
+        system "rake tr8sque:work"
       end
     end
 
