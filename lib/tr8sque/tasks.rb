@@ -1,7 +1,7 @@
 # require 'tr8sque/tasks'
 # will give you the resque tasks
 
-namespace :resque do
+namespace :tr8sque do
   task :setup
 
   desc "Start a Tr8sque worker"
