@@ -2,7 +2,7 @@ $LOAD_PATH.unshift 'lib'
 require 'tr8sque/version'
 
 Gem::Specification.new do |s|
-  s.name              = "resque"
+  s.name              = "tr8sque"
   s.version           = Tr8sque::Version
   s.date              = Time.now.strftime('%Y-%m-%d')
   s.summary           = "Resque is a Redis-backed queueing system."
