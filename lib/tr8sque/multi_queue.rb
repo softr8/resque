@@ -19,7 +19,7 @@ module Tr8sque
       @redis      = redis
 
       queues.each do |queue|
-        key = @redis.is_a?(Redis::Namespace) ? "#{@redis.namespace}:" : ""
+        key = @redis.is_a?(Tr8dis::Namespace) ? "#{@redis.namespace}:" : ""
         key += queue.redis_name
         @queue_hash[key] = queue
       end

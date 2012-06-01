@@ -32,20 +32,20 @@ module Tr8sque
     case server
     when String
       if server =~ /redis\:\/\//
-        redis = Redis.connect(:url => server, :thread_safe => true)
+        redis = Tr8dis.connect(:url => server, :thread_safe => true)
       else
         server, namespace = server.split('/', 2)
         host, port, db = server.split(':')
-        redis = Redis.new(:host => host, :port => port,
+        redis = Tr8dis.new(:host => host, :port => port,
           :thread_safe => true, :db => db)
       end
       namespace ||= :resque
 
-      @redis = Redis::Namespace.new(namespace, :redis => redis)
-    when Redis::Namespace
+      @redis = Tr8dis::Namespace.new(namespace, :redis => redis)
+    when Tr8dis::Namespace
       @redis = server
     else
-      @redis = Redis::Namespace.new(:resque, :redis => server)
+      @redis = Tr8dis::Namespace.new(:resque, :redis => server)
     end
     @queues = Hash.new { |h,name|
       h[name] = Tr8sque::Queue.new(name, @redis, coder)
@@ -63,7 +63,7 @@ module Tr8sque
   # create a new one.
   def redis
     return @redis if @redis
-    self.redis = Redis.respond_to?(:connect) ? Redis.connect : "localhost:6379"
+    self.redis = Tr8dis.respond_to?(:connect) ? Tr8dis.connect : "localhost:6379"
     self.redis
   end
 

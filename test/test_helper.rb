@@ -49,8 +49,8 @@ if ENV.key? 'RESQUE_DISTRIBUTED'
   puts "Starting redis for testing at localhost:9736 and localhost:9737..."
   `redis-server #{dir}/redis-test.conf`
   `redis-server #{dir}/redis-test-cluster.conf`
-  r = Redis::Distributed.new(['redis://localhost:9736', 'redis://localhost:9737'])
-  Tr8sque.redis = Redis::Namespace.new :resque, :redis => r
+  r = Tr8dis::Distributed.new(['redis://localhost:9736', 'redis://localhost:9737'])
+  Tr8sque.redis = Tr8dis::Namespace.new :resque, :redis => r
 else
   puts "Starting redis for testing at localhost:9736..."
   `redis-server #{dir}/redis-test.conf`

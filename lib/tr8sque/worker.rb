@@ -41,7 +41,7 @@ module Tr8sque
         reportedly_working = redis.mapped_mget(*names).reject do |key, value|
           value.nil? || value.empty?
         end
-      rescue Redis::Distributed::CannotDistribute
+      rescue Tr8dis::Distributed::CannotDistribute
         names.each do |name|
           value = redis.get name
           reportedly_working[name] = value unless value.nil? || value.empty?

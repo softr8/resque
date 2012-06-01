@@ -23,9 +23,9 @@ describe "Tr8sque" do
     assert_equal 'namespace', Tr8sque.redis.namespace
   end
 
-  it "redis= works correctly with a Redis::Namespace param" do
-    new_redis = Redis.new(:host => "localhost", :port => 9736)
-    new_namespace = Redis::Namespace.new("namespace", :redis => new_redis)
+  it "redis= works correctly with a Tr8dis::Namespace param" do
+    new_redis = Tr8dis.new(:host => "localhost", :port => 9736)
+    new_namespace = Tr8dis::Namespace.new("namespace", :redis => new_redis)
     Tr8sque.redis = new_namespace
     assert_equal new_namespace, Tr8sque.redis
 
