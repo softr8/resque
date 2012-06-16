@@ -1,5 +1,3 @@
-require 'redis'
-require 'redis-namespace'
 require 'thread'
 require 'mutex_m'
 

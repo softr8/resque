@@ -1,5 +1,4 @@
-require 'redis'
-require 'redis-namespace'
+require 'tr8dis'
 require 'thread'
 require 'mutex_m'
 
