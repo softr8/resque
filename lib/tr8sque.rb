@@ -1,5 +1,3 @@
-require 'redis/namespace'
-
 require 'tr8sque/version'
 
 require 'tr8sque/errors'
