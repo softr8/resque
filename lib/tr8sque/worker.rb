@@ -195,7 +195,7 @@ module Tr8sque
     # nil if no job can be found.
     def reserve(interval = 5.0)
       interval = interval.to_i
-      multi_queue = MultiQueue.new(
+      multi_queue = Tr8sque::MultiQueue.new(
         queues.map {|queue| Queue.new(queue, Tr8sque.redis, Tr8sque.coder) },
         Tr8sque.redis)
 

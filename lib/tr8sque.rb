@@ -16,6 +16,7 @@ require 'tr8sque/queue'
 require 'tr8sque/multi_queue'
 require 'tr8sque/coder'
 require 'tr8sque/multi_json_coder'
+require 'tr8sque/namespace'
 
 module Tr8sque
   include Helpers

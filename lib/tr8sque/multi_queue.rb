@@ -62,10 +62,12 @@ module Tr8sque
     def poll(timeout)
       queue_names = @queues.map {|queue| queue.redis_name }
       queue_name, payload = @redis.blpop(*(queue_names + [timeout]))
+
       return unless payload
 
       synchronize do
-        queue = @queue_hash[queue_name]
+        key = (@redis.is_a?(Tr8dis::Namespace) ? "#{@redis.namespace}:" : "") + queue_name
+        queue = @queue_hash[key]
         [queue, queue.decode(payload)]
       end
     end
